@@ -1,0 +1,27 @@
+# ══════════════════════════════════════════════════════════════════════
+#  ปิดกั้นโฟลเดอร์รากของโปรเจคไม่ให้เข้าถึงจากเว็บ
+#
+#  โปรเจคนี้วางอยู่ใต้ DocumentRoot ของ XAMPP (C:\xampp\htdocs) ทำให้ไฟล์
+#  อย่าง .env / storage / vendor / composer.json อยู่ในเขตที่เว็บเสิร์ฟได้
+#  🔴 ตรวจจริง 2026-09-15: ก่อนมีไฟล์นี้ http://192.168.7.12:8080/BMS/.env
+#     คืน 200 = รหัสผ่าน DB และ ERP หลุดทั้งวง LAN
+#
+#  ยังเข้าถึงได้ด้วย path traversal แบบเข้ารหัสด้วย เช่น
+#      /BMS/public/%2e%2e/.env
+#  (Apache คลี่ %2e%2e เป็น .. ก่อนที่ Laravel จะเห็น request จึงกันในโค้ดไม่ได้)
+#
+#  ไฟล์นี้บล็อกทุกอย่างในโฟลเดอร์ราก แล้วเปิดสิทธิ์คืนเฉพาะ public/
+#  ผ่าน `Require all granted` ใน public/.htaccess
+#
+#  หมายเหตุ: วิธีที่ถูกที่สุดคือตั้ง VirtualHost ให้ DocumentRoot ชี้ที่
+#  public/ โดยตรง — ไฟล์นี้เป็นเกราะสำรองสำหรับกรณีวางใต้ htdocs
+# ══════════════════════════════════════════════════════════════════════
+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>
