@@ -802,6 +802,9 @@
 
   {{-- ลิงก์ที่ตอบเป็นไฟล์ — ดาวน์โหลดเสร็จแล้วเด้งหน้าต่างขีดถูก ไม่ใช่ปล่อยจอโหลดค้าง --}}
   @include('layouts.partials.download')
+
+  {{-- หมดเวลาเชื่อมต่อ — เด้งบอกผู้ใช้ แทนที่จะเงียบแล้วเด้งไปหน้าล็อกอินเฉยๆ --}}
+  @include('layouts.partials.session-timeout')
   <script>
     'use strict';
     (function () {

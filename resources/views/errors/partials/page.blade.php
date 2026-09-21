@@ -72,7 +72,7 @@
   <div class="er-wrap">
     <div class="er-card">
       <span class="er-mark">
-        @if ($code === 403)
+        @if ($code === 403 || $code === 419)
           {{-- แม่กุญแจ = ปิดอยู่ ไม่ใช่ระบบพัง จึงไม่ใช้สีแดง --}}
           <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="4" y="10" width="16" height="10" rx="2"></rect>

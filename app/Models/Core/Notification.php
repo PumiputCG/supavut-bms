@@ -31,9 +31,17 @@ class Notification extends Model
         'tone', 'note_key', 'note_th', 'note_en',
         // บรรทัดเสริมที่ 2 — เช่น อนุมัติแล้วบอกทั้งเลขที่งบและความเห็นของผู้อนุมัติ
         'note2_key', 'note2_th', 'note2_en', 'read_at',
+        // เวลาที่ส่งอีเมลของใบนี้ออกไปแล้ว — null = ยังไม่ได้ส่ง (ดู SendNotificationEmail)
+        'emailed_at',
+        // ใบนี้อยากได้อีเมลไหม — ต้องจำไว้ เผื่อผู้รับมาเพิ่มอีเมลที่ Insight ทีหลัง
+        'wants_mail',
     ];
 
-    protected $casts = ['read_at' => 'datetime'];
+    protected $casts = [
+        'read_at' => 'datetime',
+        'emailed_at' => 'datetime',
+        'wants_mail' => 'boolean',
+    ];
 
     public function isUnread(): bool
     {

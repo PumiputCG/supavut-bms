@@ -19,6 +19,7 @@ use App\Services\Core\Notifier;
 use App\Support\FileIcon;
 use App\Support\FinalApprover;
 use App\Support\NavMenu;
+use App\Support\PdfPrinter;
 use App\Support\TableFilter;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
@@ -924,6 +925,11 @@ class InvestController extends Controller
             // รูปของคนในเอกสาร — โหมด "ดูเอกสาร" ต้องใช้วาดรูปข้างชื่อ
             'signerPhotos' => $this->formPhotos($invest),
             'canDelete' => $invest->exists && $invest->canDelete(),
+            /*
+              ปุ่มดาวน์โหลด PDF ในโหมด "ดูเอกสาร" (เจ้าของสั่ง 2026-09-21)
+              เครื่องไม่มีเบราว์เซอร์สำหรับแปลงไฟล์ = ไม่ขึ้นปุ่ม ดีกว่าให้กดแล้วพัง
+            */
+            'canPdf' => PdfPrinter::available(),
             'departments' => $this->departments(),
             'years' => range($this->defaultFiscalYear() - 1, $this->defaultFiscalYear() + 2),
             // ไอคอนไฟล์แนบตามนามสกุล — หน้าเว็บวาดเองตอนผู้ใช้เพิ่งเลือกไฟล์ ยังไม่ได้อัปโหลด

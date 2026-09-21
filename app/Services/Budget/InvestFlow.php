@@ -167,12 +167,17 @@ class InvestFlow
         */
         $recipients = array_values(array_filter($people, fn ($p) => ($p['action'] ?? Approval::APPROVE) === Approval::ACK));
 
+        /*
+          🔴 ขอบเขตการส่งอีเมล (เจ้าของสั่ง 2026-09-21)
+             ติดธง `mail` ไว้ 3 เหตุการณ์: ส่งเอกสาร → ผู้รับทราบ → ผู้อนุมัติไล่ทีละคนจนถึง CEO
+             ส่วนขั้น "ลงทะเบียนงบประมาณ" จงใจไม่ติดธง (ดูเหตุผลที่ notifyRegistrars)
+        */
         $this->notify->send(
             collect($recipients)->pluck('employee_code')->all(),
             $this->card('invest_cc', BudgetAccess::FN_INBOX, $invest, [
                 'th' => 'มีเอกสารส่งมาให้ทราบ',
                 'en' => 'A document was sent for your information',
-            ])
+            ]) + ['mail' => true]
         );
 
         /*
@@ -189,7 +194,7 @@ class InvestFlow
                 $this->card('invest_to_sign', BudgetAccess::FN_INBOX, $invest, [
                     'th' => 'รอคุณลงนามอนุมัติ',
                     'en' => 'Waiting for your signature',
-                ])
+                ]) + ['mail' => true]
             );
         }
     }
@@ -409,7 +414,7 @@ class InvestFlow
             BudgetAccess::FN_INBOX,
             $invest,
             ['th' => 'รอคุณลงนามอนุมัติ', 'en' => 'Waiting for your signature'],
-        ));
+        ) + ['mail' => true]);
     }
 
     /**
@@ -468,6 +473,10 @@ class InvestFlow
      *    และ Notifier ยิงทีละคน (คิวรีเช็คซ้ำ + insert ต่อคน) เอกสารใบเดียวจะกลายเป็น
      *    แถวแจ้งเตือนพันกว่าแถว ทำให้จังหวะกดอนุมัติค้างจนผู้ใช้รอไม่ไหว
      *    อยากให้ใครได้รับ ให้ระบุตัวคนที่ /access/modules
+     *
+     * 🔴 ขั้นนี้ "ไม่ส่งอีเมล" (เจ้าของสั่ง 2026-09-21) — จึงไม่ติดธง `mail` ให้ Notifier
+     *    เหตุผลเดียวกับย่อหน้าบน: ตั้งเป็น "ทุกคน" ได้ ถ้าส่งเมลด้วยจะกลายเป็น
+     *    เมลพันกว่าฉบับต่อเอกสาร 1 ใบ และขั้นนี้เป็นงานประจำของบัญชีที่เปิดหน้าคิวดูอยู่แล้ว
      */
     private function notifyRegistrars(Invest $invest, Budget $budget): void
     {

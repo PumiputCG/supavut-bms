@@ -104,6 +104,17 @@
   .dlg-foot > .btn.is-danger { border-color: var(--danger); background: var(--danger); }
   .dlg-foot > .btn.is-danger:hover:not(:disabled) { background: #9c2a24; border-color: #9c2a24; }
 
+  /*
+    🔴 มือถือ: ขอบ 24px รอบหน้าต่างกินความกว้างไปมาก และปุ่มยาวๆ 2 ปุ่มวางข้างกันจะถูกบีบจนตัดคำ
+       เรียงปุ่มลงมาเต็มความกว้างแทน · **ยินยอมอยู่บน · ยกเลิกอยู่ล่าง**
+       (กติกา "ยินยอมซ้าย ยกเลิกขวา" ของโปรเจค เมื่อเรียงแนวตั้งคือ บน/ล่าง เจตนาเดิมไม่เปลี่ยน)
+  */
+  @media (max-width: 560px) {
+    .dlg-wrap { padding: 12px; }
+    .dlg { padding: 22px 18px 18px; }
+    .dlg-foot { flex-direction: column; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .dlg-wrap, .dlg { animation: none; }
     .dlg-mark circle, .dlg-mark path { animation: none; stroke-dashoffset: 0; opacity: 1; }

@@ -286,4 +286,39 @@ class InsightMirror
 
         return $query->delete();
     }
+
+    /**
+     * อีเมลล่าสุดของคนกลุ่มหนึ่ง อ่านสดจาก Insight — คิวรีเดียว ไม่เขียนอะไรกลับ
+     *
+     * ใช้โดยตัวกวาด `bms:mail-pending` เพื่อตอบคำถามเดียวคือ
+     * "ตอนนี้มีใครที่เพิ่งได้อีเมลมาใหม่บ้าง" โดยไม่ต้องไปดึงข้อมูลทั้งคนทีละคน
+     *
+     * 🔴 อ่านจาก Insight ไม่ใช่จากมิเรอร์ เพราะมิเรอร์อัปเดตรายคนเฉพาะตอนคนนั้นล็อกอิน
+     *    ซึ่งเป็นต้นเหตุที่ทำให้ผู้อนุมัติไม่ได้เมลมาแล้ว (บั๊กจริง 2026-09-21)
+     *
+     * @param  array<int,string>  $codes
+     * @return array<string,string> รหัสพนักงาน => อีเมล (เฉพาะคนที่มีอีเมลจริง)
+     */
+    public function emailsFor(array $codes): array
+    {
+        $codes = array_values(array_unique(array_filter(array_map('strval', $codes))));
+
+        if ($codes === []) {
+            return [];
+        }
+
+        $out = [];
+
+        foreach (DB::connection(self::SOURCE)->table('app_users')
+            ->whereIn('employee_code', $codes)
+            ->get(['employee_code', 'email']) as $row) {
+            $email = trim((string) ($row->email ?? ''));
+
+            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) !== false) {
+                $out[(string) $row->employee_code] = $email;
+            }
+        }
+
+        return $out;
+    }
 }

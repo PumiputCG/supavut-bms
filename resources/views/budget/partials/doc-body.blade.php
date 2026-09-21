@@ -24,6 +24,12 @@
   $myStep = $myStep ?? null;
   $mySignature = $mySignature ?? null;
 
+  /*
+    ป้ายเตือน "หมวดนี้ถูกปิดใช้งาน" — หน้าที่เรียกใช้เป็นคนตัดสินว่าจะขึ้นไหม
+    🔴 ชิ้นส่วนนี้แค่วาดตามที่สั่ง ไม่ตัดสินเอง (กฎของโปรเจค: ตรรกะไม่อยู่ใน Blade ของชิ้นส่วนกลาง)
+  */
+  $groupOff = $groupOff ?? false;
+
   // บรรทัดวงเงิน — หน้างบทับด้วย "วงเงินที่อนุมัติ" ของตัวงบเอง
   $amount = $amount ?? [
     'key' => 'budget.proposedAmount',
@@ -43,6 +49,9 @@
       <dd>
         <span data-loc-th="{{ $invest->group->name_th }}" data-loc-en="{{ $invest->group->name_en ?: $invest->group->name_th }}">{{ $invest->group->name_th }}</span>
         <span class="soft">({{ $invest->group->code }})</span>
+        @if ($groupOff)
+          <span class="pill pill-warn" data-i18n="budget.group.goneShort">หมวดนี้ถูกปิดใช้งาน — ต้องเลือกหมวดใหม่</span>
+        @endif
       </dd>
     </div>
   @endif
@@ -129,7 +138,7 @@
   $signCount = max($signers->count(), 1);
 @endphp
 <div class="sign-grid @if ($signCount > 5) is-tight @endif" style="--sign-cols: {{ min($signCount, 5) }}">
-  @foreach ($signers as $step)
+  @forelse ($signers as $step)
     @php $isMine = $myStep && $myStep->id === $step->id; @endphp
     <div class="sign-box">
       <span @class(['sign-area', 'is-no' => $step->status === $A::REJECTED])
@@ -162,5 +171,15 @@
         {{ $step->acted_at?->format('d/m/Y H:i') ?: '' }}
       </span>
     </div>
-  @endforeach
+  @empty
+    {{--
+      ร่างที่ยังไม่ได้เลือกผู้อนุมัติ — ต้องบอกให้เห็น ไม่ใช่ปล่อยกรอบเปล่า
+      (ปล่อยว่างแล้วอ่านไม่ออกว่า "ยังไม่เลือก" หรือ "เลือกแล้วแต่วาดไม่ขึ้น")
+    --}}
+    <div class="sign-box">
+      <span class="sign-area"><span class="sign-wait">&nbsp;</span></span>
+      <span class="sign-name soft" data-i18n="budget.noApprover">ยังไม่ได้กำหนดผู้อนุมัติ</span>
+      <span class="sign-role" data-i18n="budget.approver">ผู้อนุมัติ</span>
+    </div>
+  @endforelse
 </div>

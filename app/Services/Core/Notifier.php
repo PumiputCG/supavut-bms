@@ -2,6 +2,7 @@
 
 namespace App\Services\Core;
 
+use App\Jobs\Core\SendNotificationEmail;
 use App\Models\Core\AppUser;
 use App\Models\Core\Notification;
 use App\Support\NavMenu;
@@ -32,9 +33,27 @@ class Notifier
      *
      * @param  array<int,string>  $codes  รหัสพนักงานผู้รับ
      * @param  array<string,mixed>  $data  module_id · function_key · event · doc_no · url · title/body คู่ th-en
+     *                                     + `mail` = true ถ้าเหตุการณ์นี้ต้องส่งอีเมลด้วย
      */
     public function send(array $codes, array $data): void
     {
+        /*
+          🔴 `mail` เป็น "ธงของเหตุการณ์" ไม่ใช่คอลัมน์ในตาราง — ต้องถอดออกก่อนบันทึกเสมอ
+             ออกแบบเป็นธงที่ผู้เรียกติดมาเอง (ไม่ใช่เช็คชื่อ event ที่นี่) เพราะ
+             ① ขั้น "ลงทะเบียนงบประมาณ" ต้องไม่ส่งเมล (เจ้าของสั่ง 2026-09-21)
+                และหัวข้อนั้นตั้งเป็น "ทุกคน" ได้ = ~1,494 ฉบับต่อเอกสารใบเดียว
+             ② โมดูลอื่นในอนาคตเปิดใช้เองได้ โดยไม่ต้องกลับมาแก้ไฟล์นี้
+        */
+        $wantsMail = (bool) ($data['mail'] ?? false);
+        unset($data['mail']);
+
+        /*
+          🔴 จำไว้ในแถวด้วย ไม่ใช่รู้แค่ตอนนี้
+             ผู้รับอาจยังไม่มีอีเมลในวินาทีนี้ แล้วไปเพิ่มที่ Insight ทีหลัง
+             ตัวกวาด bms:mail-pending จะย้อนกลับมาส่งให้ — แต่มันต้องรู้ก่อนว่าใบไหนอยากได้เมล
+        */
+        $data['wants_mail'] = $wantsMail;
+
         try {
             foreach (array_unique(array_filter($codes)) as $code) {
                 // กันแจ้งซ้ำ — เรื่องเดียวกัน คนเดียวกัน เหตุการณ์เดียวกัน มีได้ครั้งเดียวตอนที่ยังไม่อ่าน
@@ -48,10 +67,30 @@ class Notifier
                     continue;
                 }
 
-                Notification::create($data + ['employee_code' => (string) $code]);
+                $row = Notification::create($data + ['employee_code' => (string) $code]);
+
+                if ($wantsMail) {
+                    $this->queueMail($row);
+                }
             }
         } catch (Throwable) {
             // เงียบไว้ — แจ้งเตือนล้มต้องไม่ทำให้บันทึกเอกสารพัง
+        }
+    }
+
+    /**
+     * เอาอีเมลของแจ้งเตือนใบนี้เข้าคิว
+     *
+     * 🔴 ครอบ try/catch ของตัวเองอีกชั้น ทั้งที่ send() ครอบอยู่แล้ว
+     *    เพราะถ้าปล่อยให้หลุดขึ้นไป ตัวที่อยู่ข้างบนจะจบทั้งลูป = คนที่เหลือในรอบนั้น
+     *    ไม่ได้แม้แต่แจ้งเตือนในระบบ ทั้งที่เรื่องที่ล้มเป็นแค่ "เมล"
+     */
+    private function queueMail(Notification $row): void
+    {
+        try {
+            SendNotificationEmail::dispatch($row->id);
+        } catch (Throwable) {
+            // เงียบไว้ — เมลเป็นของเพิ่ม เลขแดงบนกระดิ่งยังทำงานตามปกติ
         }
     }
 
