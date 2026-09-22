@@ -1,88 +1,59 @@
-# BMS — Business Management System
+# SBMS
 
-**TH:** ระบบอนุมัติเอกสารภายใน + แดชบอร์ดงบประมาณที่ตรวจสอบย้อนกลับได้ทุกบาท
-**EN:** Internal document approvals plus a budget dashboard where every number can be traced back to its evidence.
+## SBMS คืออะไร / About
 
-`PHP 8.2` · `Laravel 12` · `MySQL` · `Tailwind CSS 4` · `Vite 7` · `ERP integration`
+ระบบงานจัดซื้อที่ครอบคลุมตั้งแต่ต้นจนจบ เริ่มจากขออนุมัติงบประมาณ เปิด PR เทียบราคา Supplier ออก PO ลงทะเบียนทรัพย์สิน ไปจนถึงออกใบ 50 ทวิ ทำงานคู่กับ ERP ของบริษัทเพื่อเติมส่วนที่ ERP ยังทำได้ไม่ครบ
 
----
+An end-to-end purchasing system covering budget approval, purchase requests, supplier comparison, purchase orders, asset registration and withholding tax certificates. It runs alongside the company ERP and fills the gaps the ERP leaves.
 
-## 🇹🇭 ภาษาไทย
+## ทำอะไรได้บ้าง / Features
 
-### คำถามที่ระบบนี้ตอบ
+- ขออนุมัติงบประมาณ และแยกงบลงทุนออกจากงบดำเนินงาน
+- เปิด PR ออก PO และดูได้ว่าเอกสารแต่ละใบอยู่ขั้นไหน
+- แดชบอร์ดงบประมาณที่แยกงบที่ตั้งไว้ ยอดสั่งซื้อ และเงินที่ใช้จริง
+- ลงทะเบียนทรัพย์สิน และออกใบ 50 ทวิ
+- ส่งอีเมลแจ้งเตือนเมื่อมีเอกสารรออนุมัติ
+- เก็บประวัติทุกการกระทำไว้ตรวจสอบย้อนหลัง
 
-"แผนกฉันมีงบเท่าไหร่ ใช้ไปแล้วเท่าไหร่ กันไว้เท่าไหร่ แล้วเหลือใช้ได้จริงอีกเท่าไหร่?"
+* Budget requests, with capital spending tracked apart from operating budgets
+* Purchase requests and purchase orders, with the status of every document visible
+* A budget dashboard that separates budgeted, ordered and actually spent amounts
+* Asset registration and withholding tax certificates (50 Tawi)
+* Email alerts when a document is waiting for approval
+* A full activity log for auditing
 
-ฟังดูเป็นคำถามง่ายๆ แต่ตอบยากมาก เพราะข้อมูลอยู่ใน ERP กระจายหลายตาราง และที่สำคัญ — **ใบสั่งซื้อ (PO) ไม่เท่ากับเงินที่ใช้ไปจริง** ระบบเก่าชอบเอามารวมกันแล้วตัวเลขก็เพี้ยน
+## Tech Stack
 
-BMS แยกสามอย่างนี้ออกจากกันให้ชัด: **งบที่ตั้งไว้** / **ที่สั่งซื้อไปแล้ว** / **ที่ใช้จริง** แล้วทุกตัวเลขบนแดชบอร์ดกดเข้าไปดูเอกสารต้นทางได้
+**Backend:** PHP 8, Laravel 12
 
-### ฟีเจอร์หลัก
+**Frontend:** Blade, Tailwind CSS, Vite, Axios
 
-- **แดชบอร์ดงบประมาณ** — แยกตามบริษัท / แผนก / ช่วงเวลา สลับไปมาโดยไม่หลุด context
-- **เอกสารอนุมัติ** — สร้าง ส่ง ติดตามสถานะ ตามลำดับอนุมัติจริงขององค์กร
-- **งบลงทุน (Invest)** — แยกจากงบดำเนินงาน
-- **Track & History** — ย้อนดูได้ว่าเอกสารไหนผ่านมือใคร เมื่อไหร่
-- **Activity Log** — บันทึกการกระทำทุกอย่างเพื่อตรวจสอบย้อนหลัง
-- **จัดการสิทธิ์** — คุมการเข้าถึงระดับโมดูลและระดับระบบแยกกัน
-- **Master Data** — จัดการข้อมูลตั้งต้นทั้งหมดในที่เดียว
+**Database:** MySQL
 
-### หลักที่ยึดตอนออกแบบ
+## ติดตั้ง / Installation
 
-1. **ยอดรวมต้องกระทบยอดกับรายละเอียดได้** ถ้าไม่ตรงต้องบอกให้ชัดว่าต่างตรงไหน ไม่ใช่ซ่อนไว้
-2. **อย่าเอา PO มานับเป็นเงินที่ใช้แล้ว** — นี่คือบั๊กคลาสสิกที่ทำให้ผู้บริหารตัดสินใจผิด
-3. **ข้อมูลที่จัดหมวดไม่ได้ ห้ามทิ้ง** ต้องแสดงไว้และบอกว่ามันคืออะไร
-4. ใช้ภาษาไทย/อังกฤษคู่กัน คุมด้วยคีย์บอร์ดได้ contrast ผ่าน WCAG AA
+ต้องมี PHP 8.2 ขึ้นไป, Composer, Node.js และ MySQL ไฟล์ migration ของระบบนี้แยกเก็บตามโมดูล จึงต้องระบุ path ให้ครบตอนรัน ก่อนรันให้แก้ค่า `DB_*` ใน `.env` ให้ตรงกับฐานข้อมูลในเครื่อง
 
-### โครงสร้างโค้ด
-
-```
-app/Http/Controllers/
-├── Budget/    → BudgetController, ApprovalController, InvestController,
-│                TrackController, HistoryController, DocGroupController
-├── Core/      → DashboardController, NotificationController, Auth
-├── Access/    → ModuleAccessController, SystemAccessController
-├── Audit/     → ActivityLogController
-└── Master/    → MasterDataController
-```
-
-### ติดตั้ง
+Requires PHP 8.2+, Composer, Node.js and MySQL. Migrations are split into folders by module, so every path has to be listed. Set the `DB_*` values in `.env` before migrating.
 
 ```bash
-composer install && npm install
-cp .env.example .env && php artisan key:generate
-php artisan migrate && npm run build && php artisan serve
+git clone https://github.com/PumiputCG/sbms.git
+cd sbms
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate \
+  --path=database/migrations \
+  --path=database/migrations/core \
+  --path=database/migrations/access \
+  --path=database/migrations/audit \
+  --path=database/migrations/budget \
+  --path=database/migrations/erp
+npm run build
+php artisan serve
 ```
 
----
+ถ้าต้องการให้ระบบส่งอีเมลแจ้งเตือน ให้รัน `php artisan queue:work` ค้างไว้อีกหน้าต่างหนึ่ง
 
-## 🇬🇧 English
-
-### The question this answers
-
-"How much budget does my department have, how much is spent, how much is committed, and how much can I actually still use?"
-
-Simple question, hard answer. The data is spread across ERP tables, and — this is the part that trips most systems up — **a purchase order is not the same thing as money spent**. Conflate the two and the numbers quietly go wrong.
-
-BMS keeps three things separate and visible: **budgeted**, **purchased**, and **consumed**. Every figure on the dashboard opens the underlying document.
-
-### Features
-
-- **Budget dashboard** by company, department, and period — context survives navigation
-- **Approval documents** following the organization's real signature chain
-- **Investment budgets** tracked apart from operating budgets
-- **Track & History** — who touched which document, and when
-- **Activity log** for after-the-fact auditing
-- **Access control** split between module-level and system-level permissions
-- **Master data** management in one place
-
-### Design rules
-
-1. **Summaries must reconcile with their details** — and where they don't, say so out loud
-2. **Never count purchase orders as consumption** — the classic bug that sends managers the wrong signal
-3. **Never silently drop unclassified data** — show it, and label what it is
-4. Thai and English throughout, keyboard navigable, WCAG AA contrast
-
-### Note
-
-Code only. ERP schema dumps, real budget data, and analysis files are excluded from this repository.
+To send email notifications, keep `php artisan queue:work` running in a separate terminal.
